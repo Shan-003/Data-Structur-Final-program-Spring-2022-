@@ -1,0 +1,214 @@
+#include <iostream>
+#include <list>
+#include <sstream>
+#include <fstream>
+#include <string>
+#include <cstdlib>//for exit
+
+void populatedata(std::ifstream &input, std::list<std::string> &list);
+void printdata(std::list<std::string> list);
+std::string displayHeader();
+bool checkDuplicate(std::list<std::string> list, std::string key);
+void add(std::list<std::string> &list);
+void remove(std::list<std::string> &list);
+void change(std::list<std::string> &list, std::string key);
+void checkList(std::list<std::string> &list);
+int main() {
+  
+  std::ifstream input("contacts.txt");
+  std::list<std::string> list, list2;
+  populatedata(input,list);
+  list.sort();
+  std::string c = displayHeader();
+  
+  while( c != "Q"){
+    
+    if(c == "D"){
+      printdata(list);
+    }
+    else if(c == "A"){
+        add(list);
+    }      
+    else if(c == "R"){
+        remove(list);
+    }
+    // change existing contact's info
+    else if(c == "C"){
+        std::string key;
+        std::cout << "which contacts' infomation you wish to change?\n";
+        getline(std::cin, key);
+        change(list, key);
+    }      
+    //updated file to phone book
+    else if(c == "U"){
+      std::cout << "Contacts Updated.\n";
+      std::ifstream input("updates.txt");
+      populatedata(input, list);
+      list.sort();
+      checkList(list);
+
+
+    }
+    c = displayHeader();
+  }
+
+}
+//Requires:  nothing 
+//Effects: display header file and allows user enters infos.
+//Modifies: nothing
+std::string displayHeader(){
+  std::string str;
+    
+  std::cout << "PHONE BOOK - MAIN MENU" << std::endl;
+  std::cout << "--------------------------------" << std::endl;
+  std::cout << "OPTIONS: " << std::endl;
+  std::cout << "D: Display all contacts" << std::endl;
+  std::cout << "A: All a contacts" << std::endl;
+  std::cout << "R: Remove a contacts" << std::endl;
+  std::cout << "C: Change contact information" << std::endl;
+  std::cout << "U: Update new contacts' file" << std::endl;
+  std::cout << "Q: Quit the program" << std::endl;
+  
+  std::cout << "Please enter your action: \n";
+  getline(std::cin, str);
+  std::cout << "--------------------------------" << std::endl;
+  return str;
+}
+
+//Requires:  an input file and an empty list 
+//Effects: filling list by reading from input file
+//Modifies: modifies the list by filling it
+void populatedata(std::ifstream &input, std::list<std::string> &list){
+  std::string line;
+  std::string NameAndPhone, name, phone;
+
+  try{
+    if(input.fail()){
+      throw new std::string("FILE OPEN ERROR EXCEPTION \n");
+    }
+    while(getline(input,line)){
+        std::istringstream instream(line);
+        getline(instream, NameAndPhone);
+
+        list.push_back(NameAndPhone);
+    }
+    
+  }
+  catch(std::string message){
+    std::cout << message;
+    exit(-1);
+  }
+}
+
+//Requires: Filled list 
+//Effects: display list's data onto the screen
+//Modifies: nothing
+void printdata(std::list<std::string> list){
+  std::cout << "YOUR PHONE BOOK:" << std::endl;
+  for(auto it = list.begin();it != list.end();it++){
+     std::cout << *it << "\n";
+    
+  }
+  std::cout << "--------------------------------" << std::endl;
+  
+}
+
+//Requires: Filled list and a key element to find name in the list
+//Effects: If the key match the name in the filled list, return true. Else, return false.
+//Modifies: nothing
+bool checkDuplicate(std::list<std::string> list, std::string key){
+  bool flag = false;
+
+    for(auto it = list.begin();it != list.end();it++){
+     size_t pos = it->rfind(' '); 
+     std::string name = it->substr(0, pos);
+     if(name == key){
+        return flag = true;
+     }
+    
+    }
+  return flag;
+}
+
+//Requires: Filled list
+//Effects: Allows user enters new contact's infos and add it to the list.
+//Modifies: modifies the list by adding a new contact
+void add(std::list<std::string> &list){
+    
+    std::string name, phoneNumber, nameAndPhone;
+    std::cout << "please your new contacts' name:\n" ;
+    getline(std::cin, name);
+    while(checkDuplicate(list,name)){
+      std::cout << "Duplicate name, please re-enter:\n" ;
+      getline(std::cin, name);
+    }
+    std::cout << "please your new contacts' phone number:\n" ;
+    getline(std::cin, phoneNumber);
+    nameAndPhone = name + " " + phoneNumber;
+    std::cout << "Contact Added\n";
+    list.push_back(nameAndPhone);
+    list.sort();
+    
+}
+
+//Requires: Filled list.
+//Effects: Allows user enters existing contact's name and remove it from the list.
+//Modifies: modifies the list by removing an existing contact.
+void remove(std::list<std::string> &list){
+    
+    std::string key;
+    std::cout << "Please enter the contacts' name you wish to remove:\n";
+    getline(std::cin, key);
+    //find contact's position.
+    for(auto it = list.begin();it != list.end();it++){
+         size_t pos = it->rfind(' ');
+         std::string name = it->substr(0, pos);
+      if(name == key){
+          std::cout << "Contact Removed\n";
+          list.erase(it);
+        }
+      
+      }
+    
+}
+
+//Requires: Filled list and a key element for searching existing contact's position.
+//Effects: Allows user enters existing contact's name they wish to change infos with and change to a new phone number.
+//Modifies: modifies the list by changing an existing contact's phone number.
+void change(std::list<std::string> &list, std::string key){
+    std::string newName, newPhoneNumber, nameAndPhone;
+    std::cout << "please enter new phone number for this contact:\n" ;
+    getline(std::cin, newPhoneNumber);
+    // find contact's position
+    for(auto it = list.begin();it != list.end();it++){
+         size_t pos = it->rfind(' ');
+         std::string name = it->substr(0, pos);
+         if(name == key){
+             list.erase(it);
+         }
+      
+      }
+    std::cout << "New Contact information changed.\n" ;
+    nameAndPhone = key + " " + newPhoneNumber;
+    list.push_back(nameAndPhone);
+    list.sort();
+}
+
+//Requires: Filled list.
+//Effects: If the two same names exists in the list, remove the first one and keep the second one.
+//Modifies: modifies the list by removing one of the two same contacts.
+void checkList(std::list<std::string> &list){
+    
+    for(auto it = list.begin();it != list.end();it++){
+        size_t pos = it->rfind(' ');
+        std::string name1 = it->substr(0, pos);
+        for(auto j = std::next(it);j != list.end();j++){
+            size_t pos = j->rfind(' ');
+            std::string name2 = j->substr(0, pos);
+            if(name1 == name2){
+                list.erase(it);
+            }
+        }
+
+    }
+}
